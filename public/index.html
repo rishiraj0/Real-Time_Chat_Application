@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+        #messageInput { width: 80%; }
+        #sendButton { width: 18%; }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Chat</h1>
+    <div id="messages"></div>
+    <input id="usernameInput" type="text" placeholder="Your name...">
+    <input id="messageInput" type="text" placeholder="Type a message...">
+    <button id="sendButton">Send</button>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+
+        ws.onmessage = (event) => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<div>${event.data}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+        };
+
+        document.getElementById('sendButton').onclick = () => {
+            const usernameInput = document.getElementById('usernameInput');
+            const messageInput = document.getElementById('messageInput');
+            const username = usernameInput.value || 'Anonymous';
+            const message = messageInput.value;
+
+            if (message) {
+                ws.send(`${username}: ${message}`);
+                messageInput.value = ''; // Clear input after sending
+            }
+        };
+
+        // Load previous messages
+        fetch('/messages')
+            .then(response => response.json())
+            .then(messages => {
+                const messagesDiv = document.getElementById('messages');
+                messages.forEach(msg => {
+                    messagesDiv.innerHTML += `<div>${msg.username}: ${msg.message}</div>`;
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+            });
+    </script>
+</body>
+</html>
